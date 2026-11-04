@@ -1,0 +1,8 @@
+{
+  "batchId": 101,
+  "productId": 1,
+  "manufactureDate": 1758585600,
+  "expiryDate": 1759190400,
+  "weight": 498,
+  "ingredients": ["Milk", "Vitamin A", "Vitamin D"]
+}

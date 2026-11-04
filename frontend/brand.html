@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Brand Portal - Food Traceability</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; background: #f7f7f7; }
+  h1 { color: #2c5f2d; }
+  .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  label { display: block; margin-top: 10px; font-weight: bold; font-size: 14px; }
+  input { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+  button { margin-top: 15px; padding: 10px 20px; background: #2c5f2d; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #234a24; }
+  #productResult, #batchResult { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; }
+  .success { background: #e6f4ea; color: #1e4620; }
+  .flagged { background: #fde7e7; color: #7a1f1f; }
+  .error { background: #fde7e7; color: #7a1f1f; }
+</style>
+</head>
+<body>
+
+<h1>🏭 Brand Portal</h1>
+
+<div class="card">
+  <h2>Register New Product</h2>
+  <label>Product ID</label>
+  <input type="number" id="p_productId" placeholder="e.g. 1">
+  <label>Brand Wallet Address</label>
+  <input type="text" id="p_brandAddress" placeholder="0x...">
+  <label>Product Name</label>
+  <input type="text" id="p_productName" placeholder="e.g. Amul Toned Milk 500ml">
+  <label>Ingredients (comma-separated)</label>
+  <input type="text" id="p_ingredients" placeholder="Milk, Vitamin A, Vitamin D">
+  <label>Weight Per Unit (grams)</label>
+  <input type="number" id="p_weightPerUnit" placeholder="500">
+  <label>Max Shelf Life (days)</label>
+  <input type="number" id="p_maxShelfLifeDays" placeholder="7">
+  <button onclick="registerProduct()">Register Product</button>
+  <div id="productResult"></div>
+</div>
+
+<div class="card">
+  <h2>Submit New Batch</h2>
+  <label>Batch ID</label>
+  <input type="number" id="b_batchId" placeholder="e.g. 101">
+  <label>Product ID</label>
+  <input type="number" id="b_productId" placeholder="e.g. 1">
+  <label>Manufacture Date</label>
+  <input type="date" id="b_manufactureDate">
+  <label>Expiry Date</label>
+  <input type="date" id="b_expiryDate">
+  <label>Weight (grams)</label>
+  <input type="number" id="b_weight" placeholder="498">
+  <label>Ingredients (comma-separated)</label>
+  <input type="text" id="b_ingredients" placeholder="Milk, Vitamin A, Vitamin D">
+  <button onclick="submitBatch()">Submit Batch</button>
+  <div id="batchResult"></div>
+</div>
+
+<script>
+const API = "http://localhost:3000";
+
+async function registerProduct() {
+  const body = {
+    productId: Number(document.getElementById("p_productId").value),
+    brandAddress: document.getElementById("p_brandAddress").value,
+    productName: document.getElementById("p_productName").value,
+    ingredients: document.getElementById("p_ingredients").value.split(",").map(s => s.trim()),
+    weightPerUnit: Number(document.getElementById("p_weightPerUnit").value),
+    maxShelfLifeDays: Number(document.getElementById("p_maxShelfLifeDays").value)
+  };
+
+  const resultDiv = document.getElementById("productResult");
+  resultDiv.style.display = "block";
+  resultDiv.className = "";
+  resultDiv.textContent = "Submitting to blockchain...";
+
+  try {
+    const res = await fetch(`${API}/register-product`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      resultDiv.className = "success";
+      resultDiv.textContent = `✅ Product registered! Tx: ${data.txHash.slice(0, 20)}...`;
+    } else {
+      resultDiv.className = "error";
+      resultDiv.textContent = `❌ Error: ${data.error}`;
+    }
+  } catch (err) {
+    resultDiv.className = "error";
+    resultDiv.textContent = `❌ Could not reach server: ${err.message}`;
+  }
+}
+
+async function submitBatch() {
+  const manufactureDate = Math.floor(new Date(document.getElementById("b_manufactureDate").value).getTime() / 1000);
+  const expiryDate = Math.floor(new Date(document.getElementById("b_expiryDate").value).getTime() / 1000);
+
+  const body = {
+    batchId: Number(document.getElementById("b_batchId").value),
+    productId: Number(document.getElementById("b_productId").value),
+    manufactureDate,
+    expiryDate,
+    weight: Number(document.getElementById("b_weight").value),
+    ingredients: document.getElementById("b_ingredients").value.split(",").map(s => s.trim())
+  };
+
+  const resultDiv = document.getElementById("batchResult");
+  resultDiv.style.display = "block";
+  resultDiv.className = "";
+  resultDiv.textContent = "Submitting to blockchain...";
+
+  try {
+    const res = await fetch(`${API}/submit-batch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      resultDiv.className = data.flagged ? "flagged" : "success";
+      resultDiv.innerHTML = data.flagged
+        ? `⚠️ Batch flagged!<br>Reasons: ${data.reasons.join(", ")}`
+        : `✅ Batch accepted, no issues found.`;
+    } else {
+      resultDiv.className = "error";
+      resultDiv.textContent = `❌ Error: ${data.error}`;
+    }
+  } catch (err) {
+    resultDiv.className = "error";
+    resultDiv.textContent = `❌ Could not reach server: ${err.message}`;
+  }
+}
+</script>
+
+</body>
+</html>

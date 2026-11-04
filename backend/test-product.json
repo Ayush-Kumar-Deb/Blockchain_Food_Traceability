@@ -1,0 +1,8 @@
+{
+  "productId": 1,
+  "brandAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cfFFb92266",
+  "productName": "Amul Toned Milk 500ml",
+  "ingredients": ["Milk", "Vitamin A", "Vitamin D"],
+  "weightPerUnit": 500,
+  "maxShelfLifeDays": 7
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Check Your Product - Food Traceability</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; background: #f7f7f7; }
+  h1 { color: #2c5f2d; }
+  .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  input { width: 70%; padding: 8px; }
+  button { padding: 9px 20px; background: #2c5f2d; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #234a24; }
+  .batch { border-left: 5px solid #ccc; padding: 10px 15px; margin-top: 12px; background: #fafafa; }
+  .batch.safe { border-left-color: #2c5f2d; }
+  .batch.flagged { border-left-color: #c0392b; background: #fdeeee; }
+  .badge { font-weight: bold; }
+  .badge.safe { color: #2c5f2d; }
+  .badge.flagged { color: #c0392b; }
+  #status { margin-top: 10px; color: #555; }
+</style>
+</head>
+<body>
+
+<h1>🔍 Check Your Product</h1>
+
+<div class="card">
+  <label>Enter Product ID (or scan QR code — future feature):</label><br><br>
+  <input type="number" id="productId" placeholder="e.g. 1">
+  <button onclick="lookupProduct()">Search</button>
+  <div id="status"></div>
+</div>
+
+<div id="results"></div>
+
+<script>
+const API = "http://localhost:3000";
+
+async function lookupProduct() {
+  const productId = document.getElementById("productId").value;
+  const statusDiv = document.getElementById("status");
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "";
+  statusDiv.textContent = "Searching...";
+
+  try {
+    const res = await fetch(`${API}/product/${productId}/batches`);
+    const data = await res.json();
+
+    if (!data.success || data.batches.length === 0) {
+      statusDiv.textContent = "No batches found for this product ID.";
+      return;
+    }
+
+    statusDiv.textContent = `Found ${data.batches.length} batch(es):`;
+
+    data.batches.forEach(batch => {
+      const div = document.createElement("div");
+      div.className = "card batch " + (batch.flagged ? "flagged" : "safe");
+
+      const mfgDate = new Date(batch.manufactureDate * 1000).toLocaleDateString();
+      const expDate = new Date(batch.expiryDate * 1000).toLocaleDateString();
+
+      div.innerHTML = `
+        <span class="badge ${batch.flagged ? 'flagged' : 'safe'}">
+          ${batch.flagged ? "⚠️ FLAGGED - Data inconsistent with history" : "✅ CONSISTENT - Safe to consume"}
+        </span>
+        <p><b>Batch ID:</b> ${batch.batchId}</p>
+        <p><b>Manufactured:</b> ${mfgDate} &nbsp; <b>Expires:</b> ${expDate}</p>
+        <p><b>Weight:</b> ${batch.weight}g</p>
+        <p><b>Ingredients:</b> ${batch.ingredients.join(", ")}</p>
+      `;
+      resultsDiv.appendChild(div);
+    });
+  } catch (err) {
+    statusDiv.textContent = `❌ Could not reach server: ${err.message}`;
+  }
+}
+</script>
+
+</body>
+</html>
