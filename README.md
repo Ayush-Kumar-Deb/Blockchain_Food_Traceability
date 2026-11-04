@@ -66,7 +66,6 @@ Latency stays in a narrow band while throughput rises, which suggests transactio
 │   ├── models/Product.js
 │   ├── models/Batch.js
 │   ├── FoodTraceability.json   # Contract ABI
-│   └── .env.example
 └── frontend/
     ├── brand.html
     └── consumer.html
@@ -82,8 +81,8 @@ Latency stays in a narrow band while throughput rises, which suggests transactio
 ### Install
 
 ```bash
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
+git clone https://github.com/Ayush-Kumar-Deb/Blockchain_Food_Traceability.git
+cd Blockchain_Food_Traceability
 npm install
 cd backend
 npm install
@@ -91,7 +90,7 @@ npm install
 
 ### Configure
 
-Copy `backend/.env.example` to `backend/.env` and fill in your MongoDB connection string. The contract address is filled in after step 2 below.
+Create a file named `backend/.env` containing `MONGODB_URI=<your MongoDB connection string>` and `CONTRACT_ADDRESS=<address printed after deploy>`, each on its own line. The contract address is filled in after step 2 below.
 
 ### Run (3 terminals)
 
